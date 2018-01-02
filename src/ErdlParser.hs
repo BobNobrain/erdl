@@ -214,28 +214,28 @@ lstr = do
 column :: GenParser Char st Column
 column = do
     colName <- lname
-    _ <- spacesOrComments
-    _ <- char ':'
-    _ <- spacesOrComments
+    spacesOrComments
+    char ':'
+    spacesOrComments
     colType <- typeName
     via <- optionMaybe viaRef
-    _ <- spacesOrComments
+    spacesOrComments
     return $ Column colName colType via
 
 typeName :: GenParser Char st TypeName
 typeName = do
     name <- lname
+    spacesOrComments
     mul <- option False hasBrackets
-    _ <- spacesOrComments
     ps <- option [] parameterList
     return $ TypeName name mul ps
     where
         hasBrackets :: GenParser Char st Bool
         hasBrackets = do
-            _ <- spacesOrComments
-            _ <- char '['
-            _ <- spacesOrComments
-            _ <- char ']'
+            char '['
+            spacesOrComments
+            char ']'
+            spacesOrComments
             return True
 
 viaRef :: GenParser Char st String
@@ -249,7 +249,7 @@ spacesOrComments :: GenParser Char st ()
 spacesOrComments = do
     spaces
     r <- option False comment
-    if r then spacesOrComments else (spaces >> return ())
+    if r then spacesOrComments else return ()
 
 comment :: GenParser Char st Bool
 comment = do
@@ -263,4 +263,4 @@ comment = do
                 manyTill anyChar (string "*/")
                 return True
             )
-    <|> fail "There is no comment"
+    <|> return False
