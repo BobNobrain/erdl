@@ -1,0 +1,20 @@
+package ru.sdevteam.space-traveller
+
+@v('express')
+config {
+    target: 'express'
+    orm: none
+}
+
+@v('flask')
+config {
+    target: 'flask'
+    orm: 'sqlalchemy'
+}
+
+use {
+    entities: .entities
+    api: .api
+    external: .external
+    extensions: .exts
+}

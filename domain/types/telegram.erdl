@@ -1,0 +1,8 @@
+type tg_sticker = int
+type tg_user = int
+
+type uint(n) = int(n, unsigned, not nullable) {
+    orm {
+        call t_orm 'uint' n
+    }
+}

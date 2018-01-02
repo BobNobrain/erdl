@@ -1,0 +1,8 @@
+// a planet
+
+@v(1)
+entity Planet {
+    name: string(40)
+    sticker: tg_sticker
+    dwellers: User[] via location
+}

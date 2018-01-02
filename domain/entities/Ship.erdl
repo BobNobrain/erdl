@@ -1,0 +1,17 @@
+// spaceship
+
+@v(1)
+@table('spaceship')
+entity Ship {
+    name: string(75)
+    description: text(255)
+
+    max_speed: int(
+        8,
+        unsigned,
+        not nullable,
+        column='speed',
+        comment='Maximum speed the ship can reach in space',
+        default=5
+    )
+}

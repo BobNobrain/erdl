@@ -1,0 +1,9 @@
+// user
+
+@v(1)
+entity User {
+    name: string(225)
+    tg_id: tg_user
+    ship: Ship
+    location: Planet via dwellers
+}
