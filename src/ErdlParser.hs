@@ -4,6 +4,7 @@ module ErdlParser
 
 import ErdlDescription
 import Text.ParserCombinators.Parsec hiding (Column)
+import Text.Parsec.Char (endOfLine)
 import Data.Char (chr)
 import Numeric (readHex)
 
@@ -18,7 +19,7 @@ erdlFile = do
     -- _ <- string "package"
     -- _ <- spaces
     -- name <- packageName
-    _ <- spaces
+    _ <- spacesOrComments
     ents <- many entity
     _ <- eof
     return $ ErdlFile (PackageName ["name"]) ents
@@ -49,46 +50,44 @@ entity :: GenParser Char st EntityDescription
 entity = do
     anns <- many annotation
     _ <- string "entity"
-    _ <- spaces
+    _ <- spacesOrComments
     entName <- lname
-    _ <- spaces
+    _ <- spacesOrComments
     extends <- optionMaybe $ do
         _ <- string "extends"
-        _ <- spaces
+        _ <- spacesOrComments
         parent <- lname
-        _ <- spaces
+        _ <- spacesOrComments
         return parent
     _ <- char '{'
-    _ <- spaces
+    _ <- spacesOrComments
     columns <- many column
     _ <- char '}'
-    _ <- spaces
+    _ <- spacesOrComments
     return $ EntityDescription entName extends columns anns
 
 annotation :: GenParser Char st Annotation
 annotation = do
     _ <- char '@'
     name <- lname
-    params <- parameterList
-    _ <- spaces
+    params <- option [] parameterList
+    _ <- spacesOrComments
     return $ Annotation name params
 
 parameterList :: GenParser Char st [Parameter]
 parameterList = do
-    try $ do
-            _ <- char '('
-            _ <- spaces
-            params <- sepBy param (char ',')
-            _ <- char ')'
-            _ <- spaces
-            return params
-    <|> return []
+    char '('
+    spacesOrComments
+    params <- sepBy param (char ',')
+    char ')'
+    spacesOrComments
+    return params
     where
         param :: GenParser Char st Parameter
         param = do
-            _ <- spaces
+            _ <- spacesOrComments
             p <- parameter
-            _ <- spaces
+            _ <- spacesOrComments
             return p
 
 parameter :: GenParser Char st Parameter
@@ -109,7 +108,7 @@ parameter = choice [numParam, strParam, namedParamOrFlag] where
     namedParamOrFlag = do
         name <- lname
         case name of "not" -> do
-                                _ <- spaces
+                                _ <- spacesOrComments
                                 flagName <- lname
                                 return $ FlagParameter flagName False
                      "true" -> return $ PlainParameter $ PVBool True
@@ -118,8 +117,9 @@ parameter = choice [numParam, strParam, namedParamOrFlag] where
 
     readRest :: String -> GenParser Char st Parameter
     readRest name = do
-        _ <- spaces
+        _ <- spacesOrComments
         _ <- char '='
+        _ <- spacesOrComments
         PlainParameter pv <- choice [numParam, strParam]
         return $ NamedParameter name pv
 
@@ -214,34 +214,53 @@ lstr = do
 column :: GenParser Char st Column
 column = do
     colName <- lname
-    _ <- spaces
+    _ <- spacesOrComments
     _ <- char ':'
-    _ <- spaces
+    _ <- spacesOrComments
     colType <- typeName
     via <- optionMaybe viaRef
-    _ <- spaces
+    _ <- spacesOrComments
     return $ Column colName colType via
 
 typeName :: GenParser Char st TypeName
 typeName = do
     name <- lname
     mul <- option False hasBrackets
-    _ <- spaces
-    ps <- parameterList
+    _ <- spacesOrComments
+    ps <- option [] parameterList
     return $ TypeName name mul ps
     where
         hasBrackets :: GenParser Char st Bool
         hasBrackets = do
-            _ <- spaces
+            _ <- spacesOrComments
             _ <- char '['
-            _ <- spaces
+            _ <- spacesOrComments
             _ <- char ']'
             return True
 
 viaRef :: GenParser Char st String
 viaRef = do
     _ <- string "via"
-    _ <- spaces
+    _ <- spacesOrComments
     name <- lname
     return name
 
+spacesOrComments :: GenParser Char st ()
+spacesOrComments = do
+    spaces
+    r <- option False comment
+    if r then spacesOrComments else (spaces >> return ())
+
+comment :: GenParser Char st Bool
+comment = do
+        try (do
+                string "//"
+                manyTill anyChar endOfLine
+                return True
+            )
+    <|> try ( do
+                string "/*"
+                manyTill anyChar (string "*/")
+                return True
+            )
+    <|> fail "There is no comment"

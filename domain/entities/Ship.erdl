@@ -1,3 +1,5 @@
+// spaceship
+
 @v(1)
 @table('spaceship')
 entity Ship {
@@ -5,11 +7,11 @@ entity Ship {
     description: text(255)
 
     max_speed: int(
-        8,
+        8, // fuck
         unsigned,
         not nullable,
         column='speed',
-        comment='Maximum speed the ship can reach in space',
+        comment =/* fuck */ 'Maximum speed the ship can reach in space',
         default=5
     )
 }
