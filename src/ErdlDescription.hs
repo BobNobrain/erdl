@@ -1,6 +1,5 @@
 module ErdlDescription
     ( ErdlFile (..)
-    , PackageName (..)
     , EntityDescription (..)
     , Column (..)
     , TypeName (..)
@@ -19,9 +18,6 @@ import CommonTypes
 
 
 data ErdlFile = ErdlFile PackageName [EntityDescription] [TypeDescription]
-    deriving (Show, Eq)
-
-data PackageName = PackageName [String]
     deriving (Show, Eq)
 
 -- name parent columns annotations

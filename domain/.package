@@ -12,9 +12,18 @@ config {
     orm: 'sqlalchemy'
 }
 
+@v('schema')
+config {
+    target: 'sql'
+    output: {
+        dir: './output'
+        format: 'sql' // 'plain', 'xml', whatever
+    }
+}
+
 use {
-    entities: .entities
-    api: .api
-    external: .external
-    extensions: .exts
+    entities: ~.entities
+    api: ~.api
+    external: ~.external
+    extensions: ~.exts
 }

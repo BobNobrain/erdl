@@ -7,8 +7,6 @@ import CommonTypes
 import ErdlDescription
 import Text.ParserCombinators.Parsec hiding (Column)
 import Text.Parsec.Char (endOfLine)
--- import Data.Char (chr)
--- import Numeric (readHex)
 
 
 parseErdl :: String -> Either ParseError ErdlFile
@@ -40,23 +38,6 @@ erdlFile = do
     eof
     return $ ErdlFile name (listEntities entries) (listTypes entries)
 
-packageName :: GenParser Char st PackageName
-packageName = do
-    string "package"
-    spacesOrComments
-    n <- lname
-    ns <- rest
-    return $ PackageName (n:ns)
-    where
-        rest :: GenParser Char st [String]
-        rest = do
-            try $ do
-                    char '.'
-                    n <- lname
-                    ns <- rest
-                    return (n:ns)
-            <|> return []
-
 entity :: GenParser Char st ErdlFileEntry
 entity = do
     anns <- many annotation
@@ -76,73 +57,6 @@ entity = do
     char '}'
     spacesOrComments
     return $ EEntity $ EntityDescription entName extends columns anns
-
-annotation :: GenParser Char st Annotation
-annotation = do
-    char '@'
-    name <- lname
-    params <- option [] parameterList
-    spacesOrComments
-    return $ Annotation name params
-
-parameterList :: GenParser Char st [Parameter]
-parameterList = do
-    char '('
-    spacesOrComments
-    params <- sepBy param (char ',')
-    char ')'
-    spacesOrComments
-    return params
-    where
-        param :: GenParser Char st Parameter
-        param = do
-            spacesOrComments
-            p <- parameter
-            spacesOrComments
-            return p
-
-parameter :: GenParser Char st Parameter
-parameter = choice [numParam, strParam, namedParamOrFlag] where
-    numParam = do
-        pv <- numVal
-        return $ PlainParameter pv
-
-    strParam = do
-        pv <- strVal
-        return $ PlainParameter pv
-
-    namedParamOrFlag :: GenParser Char st Parameter
-    namedParamOrFlag = do
-        name <- lname
-        -- TODO: refactor
-        case name of "not" -> do
-                                spacesOrComments
-                                flagName <- lname
-                                return $ FlagParameter flagName False
-                     "true" -> return $ PlainParameter $ PVBool True
-                     "false" -> return $ PlainParameter $ PVBool False
-                     _ -> try (readRest name) <|> (return $ FlagParameter name True)
-
-    readRest :: String -> GenParser Char st Parameter
-    readRest name = do
-        spacesOrComments
-        char '='
-        spacesOrComments
-        pv <- choice [numVal, strVal]
-        return $ NamedParameter name pv
-
-numVal :: GenParser Char st ParameterValue
-numVal = do
-    n <- lnum
-    return $ pv n where
-        pv (LInt i) = PVInt i
-        pv (LDouble d) = PVDouble d
-
-strVal :: GenParser Char st ParameterValue
-strVal = do
-    s <- lstr
-    return $ PVString s
-
 
 column :: GenParser Char st Column
 column = do

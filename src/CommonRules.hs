@@ -11,6 +11,25 @@ import Text.ParserCombinators.Parsec
 import Text.Parsec.Char (endOfLine)
 import Data.Char (chr)
 import Numeric (readHex)
+import CommonTypes
+
+
+packageName :: GenParser Char st PackageName
+packageName = do
+    string "package"
+    spacesOrComments
+    n <- lname
+    ns <- rest
+    return $ PackageName (n:ns)
+    where
+        rest :: GenParser Char st [String]
+        rest = do
+            try $ do
+                    char '.'
+                    n <- lname
+                    ns <- rest
+                    return (n:ns)
+            <|> return []
 
 
 -- variable name literal
@@ -24,7 +43,8 @@ data LNum
     = LInt Integer
     | LDouble Double
 
--- numeric literal
+
+-- numeric literal, either integer or double
 lnum :: GenParser Char st LNum
 lnum = do
     isNegative <- optionalMinus
@@ -70,6 +90,7 @@ lnum = do
                 ct (Just '-') ds = -read ds
                 ct (Just '+') ds = read ds
 
+
 -- string literal, wrapped either in '\'' or '"'
 lstr :: GenParser Char st String
 lstr = do
@@ -101,15 +122,18 @@ lstr = do
         strContent :: Char -> GenParser Char st String
         strContent c = many $ choice [escapedChar c, unescapedChar c]
 
+
 lbool :: GenParser Char st Bool
 lbool = try (string "true"  >> return True)
     <|> try (string "false" >> return False)
+
 
 spacesOrComments :: GenParser Char st ()
 spacesOrComments = do
     spaces
     r <- option False comment
     if r then spacesOrComments else return ()
+
 
 comment :: GenParser Char st Bool
 comment = do
@@ -124,3 +148,75 @@ comment = do
                 return True
             )
     <|> return False
+
+
+annotation :: GenParser Char st Annotation
+annotation = do
+    char '@'
+    name <- lname
+    params <- option [] parameterList
+    spacesOrComments
+    return $ Annotation name params
+
+
+parameterList :: GenParser Char st [Parameter]
+parameterList = do
+    char '('
+    spacesOrComments
+    params <- sepBy param (char ',')
+    char ')'
+    spacesOrComments
+    return params
+    where
+        param :: GenParser Char st Parameter
+        param = do
+            spacesOrComments
+            p <- parameter
+            spacesOrComments
+            return p
+
+
+parameter :: GenParser Char st Parameter
+parameter = choice [numParam, strParam, namedParamOrFlag] where
+    numParam = do
+        pv <- numVal
+        return $ PlainParameter pv
+
+    strParam = do
+        pv <- strVal
+        return $ PlainParameter pv
+
+    namedParamOrFlag :: GenParser Char st Parameter
+    namedParamOrFlag = do
+        name <- lname
+        -- TODO: refactor
+        case name of "not" -> do
+                                spacesOrComments
+                                flagName <- lname
+                                return $ FlagParameter flagName False
+                     "true" -> return $ PlainParameter $ PVBool True
+                     "false" -> return $ PlainParameter $ PVBool False
+                     _ -> try (readRest name) <|> (return $ FlagParameter name True)
+
+    readRest :: String -> GenParser Char st Parameter
+    readRest name = do
+        spacesOrComments
+        char '='
+        spacesOrComments
+        pv <- choice [numVal, strVal]
+        return $ NamedParameter name pv
+
+
+numVal :: GenParser Char st ParameterValue
+numVal = do
+    n <- lnum
+    return $ pv n where
+        pv (LInt i) = PVInt i
+        pv (LDouble d) = PVDouble d
+
+
+strVal :: GenParser Char st ParameterValue
+strVal = do
+    s <- lstr
+    return $ PVString s
+

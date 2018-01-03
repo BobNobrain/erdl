@@ -4,10 +4,14 @@ module CommonTypes
     , ParameterValue (..)
     , Argument (..)
     , ArgumentType (..)
+    , PackageName (..)
 
     , isCompatible
     , getValueType
     ) where
+
+data PackageName = PackageName [String]
+    deriving (Show, Eq)
 
 data Annotation = Annotation String [Parameter]
     deriving (Show, Eq)
