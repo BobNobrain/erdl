@@ -2,8 +2,9 @@ module ErdlParser
     ( parseErdl
     ) where
 
-import ErdlDescription
 import CommonRules
+import CommonTypes
+import ErdlDescription
 import Text.ParserCombinators.Parsec hiding (Column)
 import Text.Parsec.Char (endOfLine)
 -- import Data.Char (chr)

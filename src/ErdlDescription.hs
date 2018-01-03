@@ -4,13 +4,8 @@ module ErdlDescription
     , EntityDescription (..)
     , Column (..)
     , TypeName (..)
-    , Parameter (..)
-    , ParameterValue (..)
-    , Annotation (..)
     , TypeDescription (..)
     , TypeNameDef (..)
-    , Argument (..)
-    , ArgumentType (..)
     , TypeBody (..)
     , GeneratingDescriptor (..)
     , GDBody (..)
@@ -18,11 +13,11 @@ module ErdlDescription
     , Target (..)
 
     , makeGeneratingTarget
-    , isCompatible
-    , getValueType
     ) where
 
--- TODO: also add [TypeDescription], ConfigurationDescription and others
+import CommonTypes
+
+
 data ErdlFile = ErdlFile PackageName [EntityDescription] [TypeDescription]
     deriving (Show, Eq)
 
@@ -41,23 +36,6 @@ data Column = Column String TypeName (Maybe String)
 data TypeName = TypeName String Bool [Parameter]
     deriving (Show, Eq)
 
-data Parameter
-    = NamedParameter String ParameterValue
-    | FlagParameter String Bool
-    | PlainParameter ParameterValue
-    deriving (Show, Eq)
-
-data ParameterValue
-    = PVInt Integer
-    | PVString String
-    | PVDouble Double
-    | PVBool Bool
-    | PVBound Argument
-    deriving (Show, Eq)
-
-data Annotation = Annotation String [Parameter]
-    deriving (Show, Eq)
-
 data TypeDescription = TypeDescription TypeNameDef (Maybe TypeName) (Maybe TypeBody)
     deriving (Show, Eq)
 
@@ -65,8 +43,6 @@ data TypeNameDef = TypeNameDef String [Argument]
     deriving (Show, Eq)
 
 -- name (mb defaultValue)
-data Argument = Argument String ArgumentType (Maybe ParameterValue)
-    deriving (Show, Eq)
 
 data TypeBody = TypeBody [GeneratingDescriptor]
     deriving (Show, Eq)
@@ -92,23 +68,3 @@ data GDBody
 
 data ExternalCall = ExternalCall String [Parameter]
     deriving (Show, Eq)
-
-data ArgumentType = TInt | TString | TDouble | TBool | TFlag | TUnknown
-    deriving (Show, Eq)
-
-isCompatible :: ArgumentType -> ParameterValue -> Bool
-isCompatible TInt (PVInt _) = True
-isCompatible TString (PVString _) = True
-isCompatible TDouble (PVDouble _) = True
-isCompatible TBool (PVBool _) = True
-isCompatible t (PVBound (Argument _ u _)) = t == u
-isCompatible _ _ = False
-
-getValueType :: ParameterValue -> ArgumentType
-getValueType (PVInt _) = TInt
-getValueType (PVDouble _) = TDouble
-getValueType (PVBool _) = TBool
-getValueType (PVString _) = TString
-getValueType (PVBound (Argument _ t _)) = t
--- redundant:
--- getValueType _ = TUnknown
