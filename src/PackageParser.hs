@@ -12,6 +12,7 @@ import Text.Parsec.Char (endOfLine)
 parsePackageFile :: String -> Either ParseError PackageFileDescription
 parsePackageFile = parse packageFile "(input)"
 
+
 packageFile :: GenParser Char st PackageFileDescription
 packageFile = do
     spacesOrComments
@@ -20,6 +21,7 @@ packageFile = do
     let cfgs = listConfigurations entries
     let epts = listEps entries
     return $ PackageFileDescription pname epts cfgs
+
 
 data PkgEntry
     = PEConfig Configuration
@@ -37,6 +39,7 @@ listEps = (map extract . filter f) where
     f (PEEntryPoints _) = True
     f _ = False
     extract (PEEntryPoints e) = e
+
 
 config :: GenParser Char st PkgEntry
 config = do
@@ -58,17 +61,22 @@ entryPoints = do
     spacesOrComments
     char '{'
     spacesOrComments
-    props <- many property
+    props <- many pkgProperty
     char '}'
     spacesOrComments
     return $ PEEntryPoints $ EntryPoints ents api extr extn
     where
-        ents = lookupProperty "entities"
+        l :: String -> [(String, PackageName)] -> Maybe PackageName
+        l name ((n, p):ps) = if name == n then Just p else l name ps
+        l _ [] = Nothing
+        ents = l "entities"
+        api = l "api"
+        extr = l "external"
+        extn = l "extensions"
 
 
 data Property
     = PlainProp String ParameterValue
-    | PkgNameProp PackageName
     | NestedProp String [Property]
     deriving (Show, Eq)
 
@@ -82,3 +90,30 @@ lookupProperty name ((NestedProp p vs):ps) = if name == p then return (NestedPro
 lookupProperty _ [] = Nothing
 
 property :: GenParser Char st Property
+property = do
+    name <- lname
+    spacesOrComments
+    char ':'
+    spacesOrComments
+    nested <- option False (char '{' >> return True)
+    if nested then do
+        spacesOrComments
+        children <- many property
+        char '}'
+        spacesOrComments
+        return $ NestedProp name children
+    else do
+        pv <- choise [numVal, strVal, boolVal]
+        spacesOrComments
+        return $ PlainProp name pv
+
+
+pkgProperty :: GenParser Char st (String, PackageName)
+pkgProperty = do
+    name <- lname
+    spacesOrComments
+    char ':'
+    spacesOrComments
+    pkg <- packageName
+    spacesOrComments
+    return (name, pkg)
