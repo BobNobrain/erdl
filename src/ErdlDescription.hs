@@ -7,10 +7,22 @@ module ErdlDescription
     , Parameter (..)
     , ParameterValue (..)
     , Annotation (..)
+    , TypeDescription (..)
+    , TypeNameDef (..)
+    , Argument (..)
+    , ArgumentType (..)
+    , TypeBody (..)
+    , GeneratingDescriptor (..)
+    , ExternalCall (..)
+    , Target (..)
+
+    , makeGeneratingTarget
+    , isCompatible
+    , getValueType
     ) where
 
 -- TODO: also add [TypeDescription], ConfigurationDescription and others
-data ErdlFile = ErdlFile PackageName [EntityDescription]
+data ErdlFile = ErdlFile PackageName [EntityDescription] [TypeDescription]
     deriving (Show, Eq)
 
 data PackageName = PackageName [String]
@@ -39,7 +51,58 @@ data ParameterValue
     | PVString String
     | PVDouble Double
     | PVBool Bool
+    | PVBound Argument
     deriving (Show, Eq)
 
 data Annotation = Annotation String [Parameter]
     deriving (Show, Eq)
+
+data TypeDescription = TypeDescription TypeNameDef (Maybe TypeName) (Maybe TypeBody)
+    deriving (Show, Eq)
+
+data TypeNameDef = TypeNameDef String [Argument]
+    deriving (Show, Eq)
+
+-- name (mb defaultValue)
+data Argument = Argument String ArgumentType (Maybe ParameterValue)
+    deriving (Show, Eq)
+
+data TypeBody = TypeBody [GeneratingDescriptor]
+    deriving (Show, Eq)
+
+data GeneratingDescriptor = GeneratingDescriptor Target ExternalCall
+    deriving (Show, Eq)
+
+data Target
+    = TargetORM (Maybe String)
+    | TargetSQL (Maybe String)
+    | UnknownTarget String
+    deriving (Show, Eq)
+
+makeGeneratingTarget :: String -> Maybe String -> Target
+makeGeneratingTarget "orm" mb = TargetORM mb
+makeGeneratingTarget "sql" mb = TargetSQL mb
+makeGeneratingTarget s _ = UnknownTarget s
+
+data ExternalCall = ExternalCall String [Parameter]
+    deriving (Show, Eq)
+
+data ArgumentType = TInt | TString | TDouble | TBool | TFlag | TUnknown
+    deriving (Show, Eq)
+
+isCompatible :: ArgumentType -> ParameterValue -> Bool
+isCompatible TInt (PVInt _) = True
+isCompatible TString (PVString _) = True
+isCompatible TDouble (PVDouble _) = True
+isCompatible TBool (PVBool _) = True
+isCompatible t (PVBound (Argument _ u _)) = t == u
+isCompatible _ _ = False
+
+getValueType :: ParameterValue -> ArgumentType
+getValueType (PVInt _) = TInt
+getValueType (PVDouble _) = TDouble
+getValueType (PVBool _) = TBool
+getValueType (PVString _) = TString
+getValueType (PVBound (Argument _ t _)) = t
+-- redundant:
+-- getValueType _ = TUnknown

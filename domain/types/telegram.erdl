@@ -1,8 +1,11 @@
 type tg_sticker = int
-type tg_user = int
+type tg_user = int(12)
 
-type uint(n) = int(n, unsigned, not nullable) {
-    orm {
-        call t_orm 'uint' n
-    }
+type uint(n = 11, m: int) = int(n, unsigned, not nullable) {
+    orm: call t_orm('uint', n, m)
+    sql('mysql'): call t_mysql('uint', n)
+}
+
+type another {
+    sql: call t_mysql('another')
 }
