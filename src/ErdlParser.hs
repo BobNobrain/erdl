@@ -113,6 +113,7 @@ parameter = choice [numParam, strParam, namedParamOrFlag] where
     namedParamOrFlag :: GenParser Char st Parameter
     namedParamOrFlag = do
         name <- lname
+        -- TODO: refactor
         case name of "not" -> do
                                 spacesOrComments
                                 flagName <- lname

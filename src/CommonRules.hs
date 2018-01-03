@@ -29,16 +29,10 @@ lnum :: GenParser Char st LNum
 lnum = do
     isNegative <- optionalMinus
     wholePart <- wholePartRule
-    hasFractionalCheck <- optionMaybe $ char '.'
-    let hasFractional = case hasFractionalCheck of Nothing -> False
-                                                   Just '.' -> True
-
+    hasFractional <- option False (char '.' >> return True)
+    hasExp <- option False (choice [char 'e', char 'E'] >> return True)
+    
     fractionalPart <- if hasFractional then fracPartRule else return 0.0
-
-    hasExpCheck <- optionMaybe $ choice [char 'e', char 'E']
-    let hasExp = case hasExpCheck of Nothing -> False
-                                     Just _ -> True
-
     exponentialPart <- if hasExp then expPartRule else return 0.0
 
     return $ constructNumber isNegative (hasFractional && hasExp) wholePart fractionalPart exponentialPart
