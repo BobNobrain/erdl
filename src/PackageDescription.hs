@@ -2,11 +2,6 @@ module PackageDescription
     ( PackageFileDescription
     , Configuration
     , EntryPoints (..)
-
-    , entitiesEntryPoint
-    , apiEntryPoint
-    , externalEntryPoint
-    , extensionsEntryPoint
     ) where
 
 import CommonTypes
@@ -29,12 +24,16 @@ data Field
     | NestedField String [Field]
     deriving (Show, Eq)
 
-lookupConfigurationField :: Configuration -> String -> Maybe ParameterValue
+lookupConfigurationField :: Configuration -> String -> Maybe Field
 lookupConfigurationField (Configuration _ fs) = lookup fs where
-    lookup :: [Field] -> String -> Maybe ParameterValue
-    lookup ((Field fn pv):fs) fname =
+    lookup :: [Field] -> String -> Maybe Field
+    lookup ((PlainField fn pv):fs) fname = l fn fname fs $ PlainField fn pv
+    lookup ((NestedField fn fvs):fs) fname = l fn fname fs $ NestedField fn fvs
+    lookup [] _ = Nothing
+
+    l :: String -> String -> [Field] -> Field -> Maybe Field
+    l fn fname fs r =
         if fn == fname then
-            return pv
+            return r
         else
             lookup fs fname
-    lookup [] _ = Nothing

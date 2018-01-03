@@ -5,6 +5,8 @@ module CommonRules
     , LNum (..)
     , lbool
     , spacesOrComments
+    , packageName
+    , inlinePackageName
     ) where
 
 import Text.ParserCombinators.Parsec
@@ -18,8 +20,13 @@ packageName :: GenParser Char st PackageName
 packageName = do
     string "package"
     spacesOrComments
-    n <- lname
+    inlinePackageName
+
+inlinePackageName :: GenParser Char st PackageName
+inlinePackageName = do
+    n <- choise [string "~", lname]
     ns <- rest
+    spacesOrComments
     return $ PackageName (n:ns)
     where
         rest :: GenParser Char st [String]

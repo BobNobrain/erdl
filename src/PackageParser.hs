@@ -114,6 +114,6 @@ pkgProperty = do
     spacesOrComments
     char ':'
     spacesOrComments
-    pkg <- packageName
+    pkg <- inlinePackageName
     spacesOrComments
     return (name, pkg)

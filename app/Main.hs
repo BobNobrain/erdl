@@ -1,6 +1,7 @@
 module Main where
 
-import Lib
+import PackageParser
+import ErdlParser
 
 main :: IO ()
-main = someFunc
+main = putStrLn "Hello, world!"
