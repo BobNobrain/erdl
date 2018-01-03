@@ -50,7 +50,7 @@ packageName = do
         rest :: GenParser Char st [String]
         rest = do
             try $ do
-                    _ <- char '.'
+                    char '.'
                     n <- lname
                     ns <- rest
                     return (n:ns)
@@ -59,29 +59,29 @@ packageName = do
 entity :: GenParser Char st ErdlFileEntry
 entity = do
     anns <- many annotation
-    _ <- string "entity"
-    _ <- spacesOrComments
+    string "entity"
+    spacesOrComments
     entName <- lname
-    _ <- spacesOrComments
+    spacesOrComments
     extends <- optionMaybe $ do
-        _ <- string "extends"
-        _ <- spacesOrComments
+        string "extends"
+        spacesOrComments
         parent <- lname
-        _ <- spacesOrComments
+        spacesOrComments
         return parent
-    _ <- char '{'
-    _ <- spacesOrComments
+    char '{'
+    spacesOrComments
     columns <- many column
-    _ <- char '}'
-    _ <- spacesOrComments
+    char '}'
+    spacesOrComments
     return $ EEntity $ EntityDescription entName extends columns anns
 
 annotation :: GenParser Char st Annotation
 annotation = do
-    _ <- char '@'
+    char '@'
     name <- lname
     params <- option [] parameterList
-    _ <- spacesOrComments
+    spacesOrComments
     return $ Annotation name params
 
 parameterList :: GenParser Char st [Parameter]
@@ -95,9 +95,9 @@ parameterList = do
     where
         param :: GenParser Char st Parameter
         param = do
-            _ <- spacesOrComments
+            spacesOrComments
             p <- parameter
-            _ <- spacesOrComments
+            spacesOrComments
             return p
 
 parameter :: GenParser Char st Parameter
@@ -114,7 +114,7 @@ parameter = choice [numParam, strParam, namedParamOrFlag] where
     namedParamOrFlag = do
         name <- lname
         case name of "not" -> do
-                                _ <- spacesOrComments
+                                spacesOrComments
                                 flagName <- lname
                                 return $ FlagParameter flagName False
                      "true" -> return $ PlainParameter $ PVBool True
@@ -171,8 +171,8 @@ typeName = do
 
 viaRef :: GenParser Char st String
 viaRef = do
-    _ <- string "via"
-    _ <- spacesOrComments
+    string "via"
+    spacesOrComments
     name <- lname
     return name
 

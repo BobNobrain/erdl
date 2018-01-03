@@ -81,7 +81,7 @@ lstr :: GenParser Char st String
 lstr = do
     c <- oneOf "'\""
     strC <- strContent c
-    _ <- char c
+    char c
     return strC
     where
         unescapedChar :: Char -> GenParser Char st Char
@@ -89,7 +89,7 @@ lstr = do
 
         escapedChar :: Char -> GenParser Char st Char
         escapedChar ch = do
-            _ <- char '\\'
+            char '\\'
             c <- oneOf [ch, '\\', '/', 'b', 'f', 'n', 'r', 't', 'u']
             case c of 'u' -> do
                                 code <- count 4 $ oneOf $ ['0'..'9'] ++ ['A'..'F']
