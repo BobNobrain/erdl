@@ -208,12 +208,22 @@ generatorDescription = do
     subtype <- optionMaybe generatorSubtype
     char ':'
     spacesOrComments
-    string "call"
-    spacesOrComments
-    fnName <- lname
-    spacesOrComments
-    params <- option [] parameterList
-    return $ GeneratingDescriptor (makeGeneratingTarget target subtype) (ExternalCall fnName params)
+    gdb <- generatorDescriptionBody
+    return $ GeneratingDescriptor (makeGeneratingTarget target subtype) gdb
+
+generatorDescriptionBody :: GenParser Char st GDBody
+generatorDescriptionBody = do
+    isCall <- option False (string "call" >> return True)
+    if isCall then do
+        spacesOrComments
+        fnName <- lname
+        spacesOrComments
+        params <- option [] parameterList
+        return $ GDBExternal $ ExternalCall fnName params
+    else do
+        s <- lstr
+        spacesOrComments
+        return $ GDBValue s
 
 generatorSubtype :: GenParser Char st String
 generatorSubtype = do

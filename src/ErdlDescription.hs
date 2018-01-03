@@ -13,6 +13,7 @@ module ErdlDescription
     , ArgumentType (..)
     , TypeBody (..)
     , GeneratingDescriptor (..)
+    , GDBody (..)
     , ExternalCall (..)
     , Target (..)
 
@@ -70,7 +71,7 @@ data Argument = Argument String ArgumentType (Maybe ParameterValue)
 data TypeBody = TypeBody [GeneratingDescriptor]
     deriving (Show, Eq)
 
-data GeneratingDescriptor = GeneratingDescriptor Target ExternalCall
+data GeneratingDescriptor = GeneratingDescriptor Target GDBody
     deriving (Show, Eq)
 
 data Target
@@ -83,6 +84,11 @@ makeGeneratingTarget :: String -> Maybe String -> Target
 makeGeneratingTarget "orm" mb = TargetORM mb
 makeGeneratingTarget "sql" mb = TargetSQL mb
 makeGeneratingTarget s _ = UnknownTarget s
+
+data GDBody
+    = GDBValue String
+    | GDBExternal ExternalCall
+    deriving (Show, Eq)
 
 data ExternalCall = ExternalCall String [Parameter]
     deriving (Show, Eq)

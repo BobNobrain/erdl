@@ -6,6 +6,6 @@ type uint(n = 11, m: int) = int(n, unsigned, not nullable) {
     sql('mysql'): call t_mysql('uint', n)
 }
 
-type another {
-    sql: call t_mysql('another')
+type blob {
+    sql('mysql'): 'MEDIUMBLOB'
 }
