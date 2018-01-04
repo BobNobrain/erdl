@@ -1,7 +1,10 @@
 module Main where
 
-import PackageParser
-import ErdlParser
+import ProjectReader
 
 main :: IO ()
-main = putStrLn "Hello, world!"
+main = do
+    pj <- readProject "./domain"
+    putStrLn "========================"
+    putStrLn $ show pj
+    putStrLn "========================"
