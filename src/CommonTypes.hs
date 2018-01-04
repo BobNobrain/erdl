@@ -27,6 +27,7 @@ data ParameterValue
     | PVString String
     | PVDouble Double
     | PVBool Bool
+    | PVNone
     | PVBound Argument
     deriving (Show, Eq)
 

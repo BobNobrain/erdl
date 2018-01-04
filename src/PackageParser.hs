@@ -18,6 +18,7 @@ packageFile = do
     spacesOrComments
     pname <- packageName
     entries <- many $ choice [config, entryPoints]
+    eof
     let cfgs = listConfigurations entries
     let epts = listEps entries
     return $ PackageFileDescription pname epts cfgs
@@ -105,7 +106,7 @@ property = do
         spacesOrComments
         return $ NestedProp name children
     else do
-        pv <- choice [numVal, strVal, boolVal]
+        pv <- choice [numVal, strVal, boolVal, noneVal]
         spacesOrComments
         return $ PlainProp name pv
 

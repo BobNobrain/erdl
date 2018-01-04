@@ -1,4 +1,4 @@
-package ru.sdevteam.space-traveller
+package ru.sdevteam.space_traveller
 
 @v('express')
 config {

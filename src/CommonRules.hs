@@ -8,6 +8,7 @@ module CommonRules
     , numVal
     , strVal
     , boolVal
+    , noneVal
 
     , annotation
     , inlinePackageName
@@ -138,8 +139,12 @@ lstr = do
 
 
 lbool :: GenParser Char st Bool
-lbool = try (string "true"  >> return True)
-    <|> try (string "false" >> return False)
+lbool = try (do
+        v <- lname
+        case v of "true" -> return True
+                  "false" -> return False
+                  _ -> fail "This is not a boolean value!"
+    )
 
 
 spacesOrComments :: GenParser Char st ()
@@ -210,6 +215,7 @@ parameter = choice [numParam, strParam, namedParamOrFlag] where
                                 return $ FlagParameter flagName False
                      "true" -> return $ PlainParameter $ PVBool True
                      "false" -> return $ PlainParameter $ PVBool False
+                     "none" -> return $ PlainParameter $ PVNone
                      _ -> try (readRest name) <|> (return $ FlagParameter name True)
 
     readRest :: String -> GenParser Char st Parameter
@@ -239,3 +245,11 @@ boolVal = do
     b <- lbool
     return $ PVBool b
 
+noneVal :: GenParser Char st ParameterValue
+noneVal = try (do
+        n <- lname
+        if n == "none" then
+            return PVNone
+        else
+            fail "This is not a 'none' value!"
+    )
