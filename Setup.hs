@@ -1,4 +1,2 @@
-import Lib
-
-main = do
-    putStrLn "ERDL"
+import Distribution.Simple
+main = defaultMain

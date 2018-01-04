@@ -1,7 +1,8 @@
 module PackageDescription
-    ( PackageFileDescription
-    , Configuration
+    ( PackageFileDescription (..)
+    , Configuration (..)
     , EntryPoints (..)
+    , Field (..)
     ) where
 
 import CommonTypes

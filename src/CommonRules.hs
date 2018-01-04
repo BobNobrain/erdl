@@ -1,12 +1,19 @@
 module CommonRules
     ( lname
-    , lstr
     , lnum
     , LNum (..)
+    , lstr
     , lbool
-    , spacesOrComments
-    , packageName
+
+    , numVal
+    , strVal
+    , boolVal
+
+    , annotation
     , inlinePackageName
+    , packageName
+    , parameterList
+    , spacesOrComments
     ) where
 
 import Text.ParserCombinators.Parsec
@@ -24,7 +31,7 @@ packageName = do
 
 inlinePackageName :: GenParser Char st PackageName
 inlinePackageName = do
-    n <- choise [string "~", lname]
+    n <- choice [string "~", lname]
     ns <- rest
     spacesOrComments
     return $ PackageName (n:ns)
@@ -226,4 +233,9 @@ strVal :: GenParser Char st ParameterValue
 strVal = do
     s <- lstr
     return $ PVString s
+
+boolVal :: GenParser Char st ParameterValue
+boolVal = do
+    b <- lbool
+    return $ PVBool b
 

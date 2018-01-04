@@ -21,6 +21,7 @@ description:         Please see the README on Github at <https://github.com/bobn
 
 dependencies:
 - base >= 4.7 && < 5
+- parsec
 
 library:
   source-dirs: src
@@ -35,6 +36,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - erdl
+    - parsec
 
 tests:
   erdl-test:

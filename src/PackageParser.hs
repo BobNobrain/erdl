@@ -17,7 +17,7 @@ packageFile :: GenParser Char st PackageFileDescription
 packageFile = do
     spacesOrComments
     pname <- packageName
-    entries <- many $ choise [config, entryPoints]
+    entries <- many $ choice [config, entryPoints]
     let cfgs = listConfigurations entries
     let epts = listEps entries
     return $ PackageFileDescription pname epts cfgs
@@ -34,7 +34,7 @@ listConfigurations = (map extract . filter f) where
     f _ = False
     extract (PEConfig c) = c
 
-listEps :: [PkgEntry] -> [Configuration]
+listEps :: [PkgEntry] -> [EntryPoints]
 listEps = (map extract . filter f) where
     f (PEEntryPoints _) = True
     f _ = False
@@ -64,15 +64,17 @@ entryPoints = do
     props <- many pkgProperty
     char '}'
     spacesOrComments
-    return $ PEEntryPoints $ EntryPoints ents api extr extn
+    return $ PEEntryPoints $ mkEp props ans
     where
-        l :: String -> [(String, PackageName)] -> Maybe PackageName
-        l name ((n, p):ps) = if name == n then Just p else l name ps
-        l _ [] = Nothing
-        ents = l "entities"
-        api = l "api"
-        extr = l "external"
-        extn = l "extensions"
+        mkEp props ans = EntryPoints ents api extr extn ans where
+            l :: [(String, PackageName)] -> String -> Maybe PackageName
+            l ((n, p):ps) name = if name == n then Just p else l ps name
+            l [] _ = Nothing
+            l' = l props
+            ents = l' "entities"
+            api = l' "api"
+            extr = l' "external"
+            extn = l' "extensions"
 
 
 data Property
@@ -85,8 +87,8 @@ propertyToField (PlainProp name val) = PlainField name val
 propertyToField (NestedProp name vs) = NestedField name (map propertyToField vs)
 
 lookupProperty :: String -> [Property] -> Maybe Property
-lookupProperty name ((PlainProp p v):ps) = if name == p then return (PlainProp p v) else lookupProperty ps
-lookupProperty name ((NestedProp p vs):ps) = if name == p then return (NestedProp p vs) else lookupProperty ps
+lookupProperty name ((PlainProp p v):ps) = if name == p then return (PlainProp p v) else lookupProperty name ps
+lookupProperty name ((NestedProp p vs):ps) = if name == p then return (NestedProp p vs) else lookupProperty name ps
 lookupProperty _ [] = Nothing
 
 property :: GenParser Char st Property
@@ -103,7 +105,7 @@ property = do
         spacesOrComments
         return $ NestedProp name children
     else do
-        pv <- choise [numVal, strVal, boolVal]
+        pv <- choice [numVal, strVal, boolVal]
         spacesOrComments
         return $ PlainProp name pv
 
