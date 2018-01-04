@@ -7,7 +7,7 @@ module PackageDescription
 
 import CommonTypes
 
-data PackageFileDescription = PackageFileDescription PackageName [EntryPoints] [Configuration]
+data PackageFileDescription = PackageFileDescription PackageName [EntryPoints] [Configuration] [String]
     deriving (Show, Eq)
 
 data EntryPoints = EntryPoints { entitiesEntryPoint :: Maybe PackageName

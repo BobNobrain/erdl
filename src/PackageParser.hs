@@ -17,16 +17,18 @@ packageFile :: GenParser Char st PackageFileDescription
 packageFile = do
     spacesOrComments
     pname <- packageName
-    entries <- many $ choice [config, entryPoints]
+    entries <- many $ choice [config, entryPoints, exports]
     eof
     let cfgs = listConfigurations entries
     let epts = listEps entries
-    return $ PackageFileDescription pname epts cfgs
+    let exps = listExports entries
+    return $ PackageFileDescription pname epts cfgs (concat exps)
 
 
 data PkgEntry
     = PEConfig Configuration
     | PEEntryPoints EntryPoints
+    | PEExports [String]
     deriving (Show, Eq)
 
 listConfigurations :: [PkgEntry] -> [Configuration]
@@ -40,6 +42,12 @@ listEps = (map extract . filter f) where
     f (PEEntryPoints _) = True
     f _ = False
     extract (PEEntryPoints e) = e
+
+listExports :: [PkgEntry] -> [[String]]
+listExports = (map extract . filter f) where
+    f (PEExports _) = True
+    f _ = False
+    extract (PEExports s) = s
 
 
 config :: GenParser Char st PkgEntry
@@ -76,6 +84,19 @@ entryPoints = do
             api = l' "api"
             extr = l' "external"
             extn = l' "extensions"
+
+
+exports :: GenParser Char st PkgEntry
+exports = do
+    string "exports"
+    es <- sepBy spacedLname (char ',')
+    return $ PEExports es
+    where
+        spacedLname = do
+            spacesOrComments
+            s <- choice [string "*", lname]
+            spacesOrComments
+            return s
 
 
 data Property
