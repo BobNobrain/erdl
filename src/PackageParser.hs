@@ -117,19 +117,28 @@ property :: GenParser Char st Property
 property = do
     name <- lname
     spacesOrComments
-    char ':'
-    spacesOrComments
-    nested <- option False (char '{' >> return True)
-    if nested then do
+    if name == "not" then do
+        flagName <- lname
         spacesOrComments
-        children <- many property
-        char '}'
-        spacesOrComments
-        return $ NestedProp name children
+        return $ PlainProp flagName (PVBool False)
     else do
-        pv <- choice [numVal, strVal, boolVal, noneVal]
-        spacesOrComments
-        return $ PlainProp name pv
+        result <- option (PlainProp name (PVBool True)) (propValue name)
+        return result
+    where
+        propValue name = do
+            char ':'
+            spacesOrComments
+            nested <- option False (char '{' >> return True)
+            if nested then do
+                spacesOrComments
+                children <- many property
+                char '}'
+                spacesOrComments
+                return $ NestedProp name children
+            else do
+                pv <- choice [numVal, strVal, boolVal, noneVal]
+                spacesOrComments
+                return $ PlainProp name pv
 
 
 pkgProperty :: GenParser Char st (String, PackageName)

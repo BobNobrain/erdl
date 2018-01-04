@@ -3,5 +3,5 @@ exports *
 
 config {
     table_prefix: '[A-z0-9]{4}_'
-    optimize_inner_tables: true
+    not optimize_inner_tables
 }
